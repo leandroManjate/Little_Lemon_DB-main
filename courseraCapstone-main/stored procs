@@ -1,0 +1,88 @@
+CREATE DEFINER=`decuser`@`%` PROCEDURE `GetMaxQuantity`()
+select max(quantity) from orders
+
+CREATE DEFINER=`decuser`@`%` PROCEDURE `CancelOrder`(
+in oid int
+)
+begin 
+delete from orders o where o.id = oid;
+end
+
+CREATE DEFINER=`decuser`@`%` PROCEDURE `GetOrderDetail`(
+in custid int
+)
+begin 
+select  o.id, o.quantity, o.cost 
+from orders o 
+left join customer c on o.customerid = custid;
+end
+
+
+
+delimiter //
+create procedure CheckBooking(bookingdate, tablenum) 
+BEGIN
+	result = select * from Bookings where tablenumber = $tablenum and bookingdate = $bookingdate
+	if (mysql_num_rows($result)==0) 
+		select 'The table is not booked.';
+	else
+		select 'table number '+ @tablenum +' has been booked for '+ @bookingdate;
+END//
+delimiter ;
+ 
+ 
+delimiter //
+create procedure AddValidBooking(bookingdate, tablenum)
+BEGIN
+	result = select * from Bookings where tablenumber = $tablenum and bookingdate = $bookingdate
+	if (mysql_num_rows($result)==0)
+		START TRANSACTION
+			insert into Bookings values(2023-10-12, 5, 2);
+	else
+		select 'table number '+ @tablenum +' was already booked for '+ @bookingdate;
+end //
+delimiter ;
+ 
+ 
+delimiter //
+create procedure AddBooking(bookingdate, tablenum, customerid)
+BEGIN
+	result = select * from Bookings where tablenumber = $tablenum and bookingdate = $bookingdate and customerid = $customerid;
+	if (mysql_num_rows($result)==0)
+		START TRANSACTION
+			insert into Bookings values(bookingdate, tablenum, customerid);
+			select 'Your bookingid is:'+ bookingid from Bookings where tablenumber = $tablenum and bookingdate = $bookingdate and customerid = $customerid;
+		COMMIT
+	else
+		select 'table number '+ @tablenum +' was already booked for '+ @bookingdate
+end //
+delimiter ;
+ 
+ 
+delimiter //
+create procedure UpdateBooking(bookingdate, bookingid)
+BEGIN
+	result = select * from Bookings where bookingid = $bookingid
+	if (mysql_num_rows($result)==0)
+		select 'Bookingid does not exist'
+	else
+		START TRANSACTION
+			update Bookings set bookingdate = bookingdate where bookingid = $bookingid;
+			select 'Booking Updated';
+end //
+delimiter ;
+ 
+delimiter //
+create procedure DeleteBooking(bookingid)
+BEGIN
+	result = select * from Bookings where bookingid = $bookingid
+
+	if (mysql_num_rows($result)==0)
+
+		select 'Bookingid does not exist'
+	else
+		START TRANSACTION
+			delete from Bookings where bookingid = $bookingid;
+			select 'Booking deleted';
+end //
+delimiter ;
